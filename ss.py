@@ -1,66 +1,55 @@
 import time
-import pyautogui
 import random
+import pyautogui
 import argparse
 from datetime import datetime
 
-def keep_screen_alive(interval=60, jitter=True, mode="cursor"):
+def keep_alive(interval_min=60, interval_max=180, movement_range=10):
     """
-    Keep the screen alive by simulating user activity.
+    Keeps Microsoft Teams active by making small mouse movements at random intervals.
     
-    Parameters:
-    - interval: Time in seconds between actions (default: 60)
-    - jitter: Add random variation to the interval (default: True)
-    - mode: Activity mode - "cursor" moves mouse, "key" presses shift key,
-            "both" alternates between mouse and keyboard (default: "cursor")
+    Args:
+        interval_min (int): Minimum seconds between movements
+        interval_max (int): Maximum seconds between movements
+        movement_range (int): Maximum pixels to move in any direction
     """
-    print(f"Screen Keep Alive started at {datetime.now().strftime('%H:%M:%S')}")
-    print(f"Mode: {mode}, Interval: {interval} seconds")
-    print("Press Ctrl+C to stop the program")
+    print("Teams Keep-Alive script is now running.")
+    print("Press CTRL+C to stop the script.")
+    print(f"Moving mouse every {interval_min} to {interval_max} seconds.")
     
     try:
-        count = 0
         while True:
-            # Add random jitter to the interval if enabled
-            actual_interval = interval
-            if jitter:
-                actual_interval = interval + random.uniform(-interval * 0.1, interval * 0.1)
+            # Get current time for logging
+            current_time = datetime.now().strftime("%H:%M:%S")
             
-            # Perform action based on mode
-            if mode == "cursor" or (mode == "both" and count % 2 == 0):
-                # Get current mouse position
-                current_x, current_y = pyautogui.position()
-                
-                # Move the cursor slightly in a random direction and then back
-                offset_x = random.randint(10, 30) * random.choice([-1, 1])
-                offset_y = random.randint(10, 30) * random.choice([-1, 1])
-                
-                pyautogui.moveTo(current_x + offset_x, current_y + offset_y, duration=0.5)
-                time.sleep(0.5)
-                pyautogui.moveTo(current_x, current_y, duration=0.5)
-                
-                print(f"{datetime.now().strftime('%H:%M:%S')} - Moved cursor")
-            else:
-                # Press and release the shift key (minimal impact)
-                pyautogui.press('shift')
-                print(f"{datetime.now().strftime('%H:%M:%S')} - Pressed shift key")
+            # Store current mouse position
+            current_x, current_y = pyautogui.position()
             
-            count += 1
-            time.sleep(actual_interval)
+            # Generate random small movement
+            x_move = random.randint(-movement_range, movement_range)
+            y_move = random.randint(-movement_range, movement_range)
+            
+            # Move mouse slightly
+            pyautogui.moveRel(x_move, y_move, duration=0.5)
+            
+            # Move back to original position
+            pyautogui.moveTo(current_x, current_y, duration=0.5)
+            
+            print(f"[{current_time}] Mouse moved and returned to position.")
+            
+            # Wait for a random interval before next movement
+            wait_time = random.randint(interval_min, interval_max)
+            time.sleep(wait_time)
             
     except KeyboardInterrupt:
-        print(f"\nScreen Keep Alive stopped at {datetime.now().strftime('%H:%M:%S')}")
-        print(f"Ran for {count} cycles")
+        print("\nTeams Keep-Alive script stopped.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Keep your screen active by simulating user activity")
-    parser.add_argument("-i", "--interval", type=int, default=60, 
-                        help="Time in seconds between actions (default: 60)")
-    parser.add_argument("-j", "--no-jitter", action="store_false", dest="jitter",
-                        help="Disable random variation in the interval")
-    parser.add_argument("-m", "--mode", choices=["cursor", "key", "both"], default="cursor",
-                        help="Activity mode: cursor, key, or both (default: cursor)")
+    parser = argparse.ArgumentParser(description="Keep Microsoft Teams status active")
+    parser.add_argument("-min", type=int, default=60, help="Minimum seconds between movements (default: 60)")
+    parser.add_argument("-max", type=int, default=180, help="Maximum seconds between movements (default: 180)")
+    parser.add_argument("-range", type=int, default=10, help="Maximum pixels to move in any direction (default: 10)")
     
     args = parser.parse_args()
     
-    keep_screen_alive(interval=args.interval, jitter=args.jitter, mode=args.mode)
+    keep_alive(args.min, args.max, args.range)
