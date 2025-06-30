@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resizable HTML Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .resizable-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            min-width: 600px;
+        }
+
+        .resizable-table th,
+        .resizable-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .resizable-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            position: relative;
+        }
+
+        .resizable-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .resizable-table tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .resizable-table tbody tr:nth-child(even):hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Resize handle */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: transparent;
+            cursor: col-resize;
+            user-select: none;
+        }
+
+        .resize-handle:hover {
+            background: #007bff;
+        }
+
+        .resize-handle.resizing {
+            background: #007bff;
+        }
+
+        /* Remove resize handle from last column */
+        .resizable-table th:last-child .resize-handle {
+            display: none;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            color: #1976d2;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resizable HTML Table</h1>
+    <div class="info">
+        💡 Hover over column borders and drag to resize columns
+    </div>
+    
+    <div class="table-container">
+        <table class="resizable-table" id="resizableTable">
+            <thead>
+                <tr>
+                    <th style="width: 150px;">
+                        Name
+                        <div class="resize-handle"></div>
+                    </th>
+                    <th style="width: 200px;">
+                        Email
+                        <div class="resize-handle"></div>
+                    </th>
+                    <th style="width: 120px;">
+                        Department
+                        <div class="resize-handle"></div>
+                    </th>
+                    <th style="width: 100px;">
+                        Age
+                        <div class="resize-handle"></div>
+                    </th>
+                    <th style="width: 130px;">
+                        Salary
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>John Smith</td>
+                    <td>john.smith@company.com</td>
+                    <td>Engineering</td>
+                    <td>28</td>
+                    <td>$75,000</td>
+                </tr>
+                <tr>
+                    <td>Sarah Johnson</td>
+                    <td>sarah.johnson@company.com</td>
+                    <td>Marketing</td>
+                    <td>32</td>
+                    <td>$68,000</td>
+                </tr>
+                <tr>
+                    <td>Michael Brown</td>
+                    <td>michael.brown@company.com</td>
+                    <td>Sales</td>
+                    <td>29</td>
+                    <td>$72,500</td>
+                </tr>
+                <tr>
+                    <td>Emily Davis</td>
+                    <td>emily.davis@company.com</td>
+                    <td>HR</td>
+                    <td>35</td>
+                    <td>$65,000</td>
+                </tr>
+                <tr>
+                    <td>David Wilson</td>
+                    <td>david.wilson@company.com</td>
+                    <td>Engineering</td>
+                    <td>31</td>
+                    <td>$80,000</td>
+                </tr>
+                <tr>
+                    <td>Lisa Anderson</td>
+                    <td>lisa.anderson@company.com</td>
+                    <td>Finance</td>
+                    <td>27</td>
+                    <td>$70,000</td>
+                </tr>
+                <tr>
+                    <td>Robert Taylor</td>
+                    <td>robert.taylor@company.com</td>
+                    <td>Operations</td>
+                    <td>33</td>
+                    <td>$73,000</td>
+                </tr>
+                <tr>
+                    <td>Jennifer Miller</td>
+                    <td>jennifer.miller@company.com</td>
+                    <td>Marketing</td>
+                    <td>26</td>
+                    <td>$66,500</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        class ResizableTable {
+            constructor(tableId) {
+                this.table = document.getElementById(tableId);
+                this.isResizing = false;
+                this.currentHandle = null;
+                this.currentColumn = null;
+                this.startX = 0;
+                this.startWidth = 0;
+                
+                this.init();
+            }
+
+            init() {
+                const handles = this.table.querySelectorAll('.resize-handle');
+                
+                handles.forEach((handle, index) => {
+                    handle.addEventListener('mousedown', (e) => this.startResize(e, handle, index));
+                });
+
+                document.addEventListener('mousemove', (e) => this.resize(e));
+                document.addEventListener('mouseup', () => this.stopResize());
+                
+                // Prevent text selection during resize
+                document.addEventListener('selectstart', (e) => {
+                    if (this.isResizing) e.preventDefault();
+                });
+            }
+
+            startResize(e, handle, columnIndex) {
+                this.isResizing = true;
+                this.currentHandle = handle;
+                this.currentColumn = columnIndex;
+                this.startX = e.clientX;
+                
+                const th = handle.parentElement;
+                this.startWidth = th.offsetWidth;
+                
+                handle.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                
+                e.preventDefault();
+            }
+
+            resize(e) {
+                if (!this.isResizing) return;
+                
+                const diff = e.clientX - this.startX;
+                const newWidth = this.startWidth + diff;
+                
+                // Minimum width constraint
+                const minWidth = 50;
+                if (newWidth < minWidth) return;
+                
+                // Get all header cells
+                const headerCells = this.table.querySelectorAll('thead th');
+                const currentHeader = headerCells[this.currentColumn];
+                
+                // Update the width
+                currentHeader.style.width = newWidth + 'px';
+                
+                // Update corresponding body cells in the same column
+                const rows = this.table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cell = row.children[this.currentColumn];
+                    if (cell) {
+                        cell.style.width = newWidth + 'px';
+                    }
+                });
+            }
+
+            stopResize() {
+                if (!this.isResizing) return;
+                
+                this.isResizing = false;
+                
+                if (this.currentHandle) {
+                    this.currentHandle.classList.remove('resizing');
+                }
+                
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                
+                this.currentHandle = null;
+                this.currentColumn = null;
+            }
+        }
+
+        // Initialize the resizable table when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ResizableTable('resizableTable');
+        });
+    </script>
+</body>
+</html>
