@@ -1,0 +1,17 @@
+let skills = [], jobs = 0;
+setInterval(() => {
+    skills.push(...Array.from(document.querySelectorAll('#job-skills-description li'), li => li.textContent.trim()));
+    const btn = document.querySelector('button.btn.btn-lg.btn-primary.new-btn');
+    if(btn) { btn.click(); jobs++; }
+}, 2000);
+
+window.downloadSkills = () => {
+    const counts = {};
+    skills.forEach(s => counts[s] = (counts[s] || 0) + 1);
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const content = `Total Jobs Applied: ${jobs}\n\n` + sorted.map(([skill, count]) => `${skill}: ${count}`).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content]));
+    a.download = 'skills.txt';
+    a.click();
+};
